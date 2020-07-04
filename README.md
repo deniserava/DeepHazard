@@ -7,4 +7,4 @@ Paper:
 
 This code implements DeepHazard: a Neural Network method for survival data that allows time-varying covariates. 
 
-For an explanation of how to use this method, please see the sample code in the Sample folder.
+For an explanation of how to use this method, please see the sample.py in the Sample folder.
