@@ -5,6 +5,6 @@ Title: "DeepHazard: Neural Network for Time Varying Risks"
 Authors: Denise Rava, Jelena Bradic
 Paper: 
 
-This code implements DeepHazard: a Neural Network method for survival data that allow time-varying covariates. 
+This code implements DeepHazard: a Neural Network method for survival data that allows time-varying covariates. 
 
-The sample code in the Sample folder explains how to practically apply it.
+For an explanation of how to use this method, please see the sample code in the Sample folder.
