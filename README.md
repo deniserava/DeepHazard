@@ -20,7 +20,7 @@ train=pd.read_csv('sampletrainconst.csv',delimiter=',') #import data
 test=pd.read_csv('sampletestconst.csv',delimiter=',')
 structure = [{'activation': 'Relu','num_units':10,'dropout':0.2},{'activation': 'Relu','num_units':10,'dropout':0.2}] #define structure
 deephaz,Surv,C_index=dh.DeepHazConst(train,test,l2c=1e-5,lrc=2e-1,structure=structure,init_method='he_uniform',optimizer='adam',num_epochs=1000,early_stopping=1e-5,penal='Ridge') #apply DeepHazard
-'''
+```
 
 ```python
 train=pd.read_csv('sampletraintimevar.csv',delimiter=',') #import data
@@ -28,7 +28,7 @@ test=pd.read_csv('sampletesttimevar.csv',delimiter=',')
 inter=np.array((0,0.2,0.4,0.6,100)) #set interval
 structure = [{'activation': 'Relu','num_units':10,'dropout':0.2},{'activation': 'Relu','num_units':10,'dropout':0.2}] #define structure of network
 deepHazlis,Surv,C_index=dh.DeepHazTime(train=train,test=test,inter=inter,Ncol=3,l2c=1e-5,lrc=2e-1,structure=structure,init_method='he_uniform',optimizer='adam',num_epochs=1000,early_stopping=1e-5,penal='Ridge') #apply DeepHazard
-'''
+```
 
 Additional details, comments and explanations can be found in sample.py. 
 
