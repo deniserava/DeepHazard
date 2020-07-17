@@ -1,11 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
-"""
-Created on Fri Jul  3 13:35:10 2020
-
-@author: Denise
-"""
-
+ 
+#Created on Fri Jul  3 13:35:10 2020
 import numpy as np
 import bisect
 import DeepHaz as dhn
@@ -18,8 +14,8 @@ from pysurvival.utils._metrics import _concordance_index
     
 
 def Createtrainingsubset(inter,train,Ncol):
-    """ Creating all the subsets that are needed for training the model with time varying covariates
-    """
+   #Creating all the subsets that are needed for training the model with time varying covariates
+   
     #define the subsets
     M=inter.shape[0]-1
     
@@ -77,8 +73,8 @@ def Createtrainingsubset(inter,train,Ncol):
     return(X_train_list,T_train_list,E_train_list,X_train_final_list,T_train,E_train)
        
 def Createtestsubset(inter,test,Ncol):
-    """ Creating all the subsets that are needed for applying the model with time varying covariates
-    """
+    #Creating all the subsets that are needed for applying the model with time varying covariates
+    
     #define the subsets
     M=inter.shape[0]-1
     
@@ -104,16 +100,22 @@ def Createtestsubset(inter,test,Ncol):
     
     
 def TrainDeepHazTime(train,inter,Ncol,l2c,lrc,structure,init_method,optimizer,num_epochs,early_stopping,penal):
-    """ Training the model with time_varying covariates
-    """
+   #Training the model with time_varying covariates
+  
+    # prepare the data by creating the datasets D
     X_train_list,T_train_list,E_train_list,X_train_final_list,T_train,E_train=Createtrainingsubset(inter,train,Ncol)
     M=inter.shape[0]-1
     deepHazlis=[]
     Ttemp=T_train_list[0]
     Etemp=E_train_list[0]
     Xtemp=X_train_list[0]
+    
+    # say what this function is doing ?
     deephaz1 = dhn.DeepHaz(structure=structure)
+    
+    # say what this function is doing ?
     deephaz1.fit(Xtemp, Ttemp, Etemp, lr=lrc, init_method=init_method,optimizer=optimizer,num_epochs=num_epochs,l2_reg=l2c,early_stopping=early_stopping,penal=penal)
+    
     deepHazlis.append(deephaz1)
     score_list=[]
     score1=deephaz1.predict_risk(X_train_final_list[0])
@@ -122,10 +124,16 @@ def TrainDeepHazTime(train,inter,Ncol,l2c,lrc,structure,init_method,optimizer,nu
     scoretemp=deephaz1.predict_risk(X_train_list[1][1])
     scoretemp.shape=(scoretemp.shape[0],1)
     X_train2n=np.concatenate((X_train_list[1][0],scoretemp),1)
+    
+    # running M neural-networks?
     for x in range(2,M):
         Ttemp=T_train_list[x-1]
         Etemp=E_train_list[x-1]
+        #specify the network structure
+        # we can easily here allow for some different learning rates or different structures, right ?
         deephaz2 = dhn.DeepHaz(structure=structure)
+        
+        #X_train2n seems to be the same for each itteration
         deephaz2.fit(X_train2n, Ttemp, Etemp, lr=lrc, t_start=inter[x-1],init_method='he_uniform',optimizer='adam',num_epochs=1000,l2_reg=l2c,early_stopping=1e-5,penal='Ridge')
         deepHazlis.append(deephaz2)
         trainscore=X_train_final_list[x-1]
@@ -135,6 +143,8 @@ def TrainDeepHazTime(train,inter,Ncol,l2c,lrc,structure,init_method,optimizer,nu
         score2.shape=(score2.shape[0],1)
         score_list.append(score2)
         score_temp=[]
+        
+        #can you explain for me what is each for loop doing and where does one end and another begin?
         for i in range(x):
          trainscore=X_train_list[x][i+1]
          for j in score_temp[::-1]:
@@ -143,6 +153,7 @@ def TrainDeepHazTime(train,inter,Ncol,l2c,lrc,structure,init_method,optimizer,nu
          score31.shape=(score31.shape[0],1)
          score_temp.append(score31)
         X_train2n=X_train_list[x][0]
+        
         for j in score_temp[::-1]:
             X_train2n=np.concatenate((X_train2n,j),1)
     Ttemp=T_train_list[M-1]
@@ -169,11 +180,13 @@ def TrainDeepHazTime(train,inter,Ncol,l2c,lrc,structure,init_method,optimizer,nu
     
     time=T_train
     
+    # I didn't see where was one neetwork fed into the future one ?
+    
     return(deepHazlis,score,cumbase,time)
   
 def PredictDeepHazTime(inter,test,Ncol,deepHazlis,cumbase,time):
-    """ Use the model to predict survival function with time varying covariates
-    """
+   #Use the model to predict survival function with time varying covariates
+  
     M=inter.shape[0]-1
     score_list=[]
     X_test_list,T_test,E_test=Createtestsubset(inter,test,Ncol)
