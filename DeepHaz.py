@@ -1,12 +1,6 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
-Created on Mon Nov  4 11:12:30 2019
-
-@author: Denise
-"""
-
-"""
 Created on Tue Jun  4 09:50:53 2019
 
 @author: Denise
