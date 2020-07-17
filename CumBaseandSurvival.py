@@ -46,6 +46,8 @@ def predict_cumbase( score, T, E,inter,indicator):
                *T=censored event time onto which the network has been trained
                *inter=interval 
                *indicator=a vector that indicates at which interval any censored event times belong.
+            
+            Output: Predicted Cumulative Baseline Hazard \Lambda_0
         """
         M=inter.shape[0]-1 
         N=T.shape[0]
@@ -102,15 +104,10 @@ def predict_cumbase( score, T, E,inter,indicator):
         
         cum_base_pre=torch.cat((torch.zeros(1),cum_base_pre))
         
-        #cum_base=np.maximum.accumulate(cum_base_pre)
-        
         N=T.shape[0]
         
         cum_base=cum_base_pre[1:(N+1)]
     
-        
-       # cum_base=torch.FloatTensor(cum_base)
-        
         return cum_base
 
 def predict_surv(cumbase,score,T,inter,indicator,use_log = False):
