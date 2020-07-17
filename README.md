@@ -14,7 +14,7 @@ This code implements DeepHazard: a Neural Network method for survival data for s
 * ` DeepHazTime(()`: fits DeepHazard on survival Data with time-varying covariates returning predicted survival functions for any observations in the test set and time dependent concorance index from Antolini, L.; Boracchi, P.; and Biganzoli, E. 2005. 'A timedependent discrimination index for survival data. Statistics in Medicine 24:3927–3944' as measure of performance.
 
 ### Example
-sample.py in the Sample folder show two examples, one applied on survival data with time constant covariates and one with time varying covariates. Datasets for both examples are provided in the Sample folder. In both examples DeepHazard is trained on the train dataset and used for predicting survival function on the test dataset. Concordance index is then computed as measure of performance. 
+sample.py in the Sample folder shows two examples, one applied on survival data with time constant covariates and one with time varying covariates. Datasets for both examples are provided in the Sample folder. In both examples DeepHazard is trained on the train dataset and used for predicting survival function on the test dataset. Concordance index is then computed as measure of performance. 
 ```python
 train=pd.read_csv('sampletrainconst.csv',delimiter=',') #import data
 test=pd.read_csv('sampletestconst.csv',delimiter=',')
