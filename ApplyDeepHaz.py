@@ -175,7 +175,7 @@ def TrainDeepHazTime(train,inter,Ncol,l2c,lrc,structure,init_method,optimizer,nu
     score2.shape=(score2.shape[0],1)
     score_list.append(score2)
     
-    #define (\hat h_0,...\hat h_M)
+    #define (\hat h_0,...\hat h_M) for the train set
     score=score_list[0].reshape((-1,1))
     for j in range(1,M):
        score=np.concatenate((score,score_list[j].reshape((-1,1))), axis=1)
@@ -209,7 +209,7 @@ def PredictDeepHazTime(inter,test,Ncol,deepHazlis,cumbase,time):
         score_list.append(score1)
     score=score_list[0].reshape((-1,1))
     for j in range(1,M):
-       score=np.concatenate((score,score_list[j].reshape((-1,1))), axis=1) #put together predicted (h_0,...,h_M) for test set
+       score=np.concatenate((score,score_list[j].reshape((-1,1))), axis=1)  #define (\hat h_0,...\hat h_M) for the test set
     
     def ind(t):
         return bisect.bisect_left(inter, t)
@@ -345,7 +345,7 @@ def DeepHazConst(train,test,l2c,lrc,structure,init_method,optimizer,num_epochs,e
     deephaz = dhn.DeepHaz(structure=structure) #define DeepHazard NN
     deephaz.fit(X_train, T_train, E_train, lr=lrc, init_method=init_method,optimizer=optimizer,num_epochs=num_epochs,l2_reg=l2c,early_stopping=early_stopping,penal=penal) #fit DeepHazard NN on train set
     Surv=deephaz.predict_surv(X_test,use_log = False) #predict survival function for test set
-    score=deephaz.predict_risk(X_test,use_log = False) #predict risk score h for test set
+    score=deephaz.predict_risk(X_test,use_log = False) #predict risk score (\hat h_0,...\hat h_M) for test set
     order = np.argsort(-T_test)
     score = score[order]
     T_test = T_test[order]
