@@ -26,7 +26,7 @@ def risk_fail_matrix( T, E):
         for i in range(N):
             
             # At risk
-            index_risk = np.argwhere( T >= T[i] ).flatten()
+            index_risk = np.argwhere( (T >= T[i]).values ).flatten()
             Risk[ i, index_risk] = 1.
             Risk_mod[ i, index_risk] = 1/float(len(index_risk))
             
