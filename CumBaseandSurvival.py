@@ -32,7 +32,7 @@ def risk_fail_matrix( T, E):
             
             # Failed
             if E[i] == 1 :
-                index_fail = np.argwhere( T == T[i] )[0]
+                index_fail = np.argwhere( (T == T[i]).values )[0]
                 Fail[index_fail, i] = 1.
         return torch.FloatTensor(Risk), torch.FloatTensor(Fail),torch.FloatTensor(Risk_mod)
 
