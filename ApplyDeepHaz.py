@@ -1,7 +1,3 @@
-#!/usr/bin/env python2
-# -*- coding: utf-8 -*-
- 
-#Created on Fri Jul  3 13:35:10 2020
 import numpy as np
 import bisect
 import DeepHaz as dhn
@@ -14,8 +10,8 @@ from pysurvival.utils._metrics import _concordance_index
     
 
 def Createtrainingsubset(inter,train,Ncol):
-   #Internal function that created all the subsets D that are needed for training the model with time varying covariates
-   
+    """ Creating all the subsets that are needed for training the model with time varying covariates
+    """
     #define the subsets
     M=inter.shape[0]-1
     
@@ -73,8 +69,8 @@ def Createtrainingsubset(inter,train,Ncol):
     return(X_train_list,T_train_list,E_train_list,X_train_final_list,T_train,E_train)
        
 def Createtestsubset(inter,test,Ncol):
-    #Internal function that creates all the subsets D that are needed for using the trained model to make prediction on the test set with time varying covariates
-   
+    """ Creating all the subsets that are needed for applying the model with time varying covariates
+    """
     #define the subsets
     M=inter.shape[0]-1
     
@@ -100,44 +96,30 @@ def Createtestsubset(inter,test,Ncol):
     
     
 def TrainDeepHazTime(train,inter,Ncol,l2c,lrc,structure,init_method,optimizer,num_epochs,early_stopping,penal):
-   #Training the model with time_varying covariates
-  
-    # prepare the data by creating the datasets D
+    """ Training the model with time_varying covariates
+    """
     X_train_list,T_train_list,E_train_list,X_train_final_list,T_train,E_train=Createtrainingsubset(inter,train,Ncol)
     M=inter.shape[0]-1
     deepHazlis=[]
     Ttemp=T_train_list[0]
     Etemp=E_train_list[0]
     Xtemp=X_train_list[0]
-    
-    # define DeepHaz NN_0
     deephaz1 = dhn.DeepHaz(structure=structure)
-    
-    # fit DeepHaz NN_0
     deephaz1.fit(Xtemp, Ttemp, Etemp, lr=lrc, init_method=init_method,optimizer=optimizer,num_epochs=num_epochs,l2_reg=l2c,early_stopping=early_stopping,penal=penal)
-    
     deepHazlis.append(deephaz1)
     score_list=[]
-    score1=deephaz1.predict_risk(X_train_final_list[0]) #predict h_0 on train set
+    score1=deephaz1.predict_risk(X_train_final_list[0])
     score1.shape=(score1.shape[0],1)
     score_list.append(score1)
-    scoretemp=deephaz1.predict_risk(X_train_list[1][1]) #predict h_0 on D_1
+    scoretemp=deephaz1.predict_risk(X_train_list[1][1])
     scoretemp.shape=(scoretemp.shape[0],1)
-    X_train2n=np.concatenate((X_train_list[1][0],scoretemp),1) #define \tilde Z_1 
-    
-    # define and running NN_1...NN_M-1 
+    X_train2n=np.concatenate((X_train_list[1][0],scoretemp),1)
     for x in range(2,M):
         Ttemp=T_train_list[x-1]
         Etemp=E_train_list[x-1]
-        #specify the network structure
-        # define DeepHaz NN_x-1
         deephaz2 = dhn.DeepHaz(structure=structure)
-        
-        # fit DeepHaz NN_x-1
         deephaz2.fit(X_train2n, Ttemp, Etemp, lr=lrc, t_start=inter[x-1],init_method='he_uniform',optimizer='adam',num_epochs=1000,l2_reg=l2c,early_stopping=1e-5,penal='Ridge')
         deepHazlis.append(deephaz2)
-        
-        # predict h_x-1 on train set
         trainscore=X_train_final_list[x-1]
         for i in range(x-2,-1,-1):
             trainscore=np.concatenate((trainscore,score_list[i]),1)
@@ -145,8 +127,6 @@ def TrainDeepHazTime(train,inter,Ncol,l2c,lrc,structure,init_method,optimizer,nu
         score2.shape=(score2.shape[0],1)
         score_list.append(score2)
         score_temp=[]
-        
-        #predict h_0,...h_x-1 on D_x
         for i in range(x):
          trainscore=X_train_list[x][i+1]
          for j in score_temp[::-1]:
@@ -154,20 +134,14 @@ def TrainDeepHazTime(train,inter,Ncol,l2c,lrc,structure,init_method,optimizer,nu
          score31=deepHazlis[i].predict_risk(trainscore)
          score31.shape=(score31.shape[0],1)
          score_temp.append(score31)
-        
-        # define \tilde Z_x
         X_train2n=X_train_list[x][0]
         for j in score_temp[::-1]:
             X_train2n=np.concatenate((X_train2n,j),1)
-    
     Ttemp=T_train_list[M-1]
     Etemp=E_train_list[M-1]
-    #define NN_M
     deephaz2 = dhn.DeepHaz(structure=structure)
-    #fit NN_M
     deephaz2.fit(X_train2n, Ttemp, Etemp, lr=lrc, t_start=inter[x-1],init_method='he_uniform',optimizer='adam',num_epochs=1000,l2_reg=l2c,early_stopping=1e-5,penal='Ridge')
     deepHazlis.append(deephaz2)
-    # predict h_M on train set
     trainscore=X_train_final_list[M-1]
     for i in range(M-2,-1,-1):
         trainscore=np.concatenate((trainscore,score_list[i]),1)
@@ -175,16 +149,19 @@ def TrainDeepHazTime(train,inter,Ncol,l2c,lrc,structure,init_method,optimizer,nu
     score2.shape=(score2.shape[0],1)
     score_list.append(score2)
     
-    #define (\hat h_0,...\hat h_M) for the train set
     score=score_list[0].reshape((-1,1))
     for j in range(1,M):
        score=np.concatenate((score,score_list[j].reshape((-1,1))), axis=1)
     
-    def ind(t):
-        return bisect.bisect_left(inter, t)
-    indicator=map(ind, T_train)
+    indicator=list(range(T_train.shape[0]))
+    for i in range(T_train.shape[0]):
+       if (T_train[i]<inter[1]):
+          indicator[i]=1
+    for i in range(T_train.shape[0]):
+       for j in range(1,inter.shape[0]-1):
+          if (T_train[i]<inter[j+1] and T_train[i]>=inter[j]):
+             indicator[i]=j+1
     
-    #predict Lambda_0
     cumbase=cbs.predict_cumbase(score, T_train, E_train,inter,indicator)
     
     time=T_train
@@ -192,32 +169,37 @@ def TrainDeepHazTime(train,inter,Ncol,l2c,lrc,structure,init_method,optimizer,nu
     return(deepHazlis,score,cumbase,time)
   
 def PredictDeepHazTime(inter,test,Ncol,deepHazlis,cumbase,time):
-   #Use the model to predict survival function with time varying covariates
-  
+    """ Use the model to predict survival function with time varying covariates
+    """
     M=inter.shape[0]-1
     score_list=[]
     X_test_list,T_test,E_test=Createtestsubset(inter,test,Ncol)
-    score1=deepHazlis[0].predict_risk(X_test_list[0]) #predict h_0 for test set
+    score1=deepHazlis[0].predict_risk(X_test_list[0])
     score1.shape=(score1.shape[0],1)
     score_list.append(score1)
     for i in range(1,M):
         testscore=X_test_list[i]
         for j in score_list[::-1]:
             testscore=np.concatenate((testscore,j),1)
-        score1=deepHazlis[i].predict_risk(testscore) #predict h_i for test set
+        score1=deepHazlis[i].predict_risk(testscore)
         score1.shape=(score1.shape[0],1)
         score_list.append(score1)
     score=score_list[0].reshape((-1,1))
     for j in range(1,M):
-       score=np.concatenate((score,score_list[j].reshape((-1,1))), axis=1)  #define (\hat h_0,...\hat h_M) for the test set
+       score=np.concatenate((score,score_list[j].reshape((-1,1))), axis=1)
     
-    def ind(t):
-        return bisect.bisect_left(inter, t)
-
     
-    indicator=map(ind, time)
+    indicator=list(range(time.shape[0]))
+    for i in range(time.shape[0]):
+       if (time[i]<inter[1]):
+          indicator[i]=1
+    for i in range(time.shape[0]):
+       for j in range(1,inter.shape[0]-1):
+          if (time[i]<inter[j+1] and time[i]>=inter[j]):
+             indicator[i]=j+1
     
-    Surv=cbs.predict_surv(cumbase,score,time,inter,indicator,use_log = False) #predict survival function for test set
+   
+    Surv=cbs.predict_surv(cumbase,score,time,inter,indicator,use_log = False)
     
     return(score,Surv)
 
@@ -277,12 +259,12 @@ def DeepHazTime(train,test,inter,Ncol,l2c,lrc,structure,init_method,optimizer,nu
            index for survival data. Statistics in Medicine 24:3927–3944.
   
     """
-    deepHazlis,score,cumbase,time=TrainDeepHazTime(train,inter,Ncol,l2c,lrc,structure,init_method,optimizer,num_epochs,early_stopping,penal) #train DeepHazard on train set
-    score,Surv=PredictDeepHazTime(inter,test,Ncol,deepHazlis,cumbase,time) #predict risk score h and survival function for test set
+    deepHazlis,score,cumbase,time=TrainDeepHazTime(train,inter,Ncol,l2c,lrc,structure,init_method,optimizer,num_epochs,early_stopping,penal)
+    score,Surv=PredictDeepHazTime(inter,test,Ncol,deepHazlis,cumbase,time)
     X_test_list,T_test,E_test=Createtestsubset(inter,test,Ncol)
     T_test=np.array(T_test)
     E_test=np.array(E_test)
-    C_index=cit.concordance_td(T_test, E_test, np.transpose(Surv), np.arange(T_test.shape[0]), method='antolini') #compute antolini concordance index
+    C_index=cit.concordance_td(T_test, E_test, np.transpose(Surv), np.arange(T_test.shape[0]), method='antolini')
     return(deepHazlis,Surv,C_index)
           
     
@@ -342,15 +324,18 @@ def DeepHazConst(train,test,l2c,lrc,structure,init_method,optimizer,num_epochs,e
     E_test=test['Event']
     X_test=test.copy()
     X_test=X_test.drop(['Time','Event'],axis=1)
-    deephaz = dhn.DeepHaz(structure=structure) #define DeepHazard NN
-    deephaz.fit(X_train, T_train, E_train, lr=lrc, init_method=init_method,optimizer=optimizer,num_epochs=num_epochs,l2_reg=l2c,early_stopping=early_stopping,penal=penal) #fit DeepHazard NN on train set
-    Surv=deephaz.predict_surv(X_test,use_log = False) #predict survival function for test set
-    score=deephaz.predict_risk(X_test,use_log = False) #predict risk score (\hat h_0,...\hat h_M) for test set
+    deephaz = dhn.DeepHaz(structure=structure)
+    deephaz.fit(X_train, T_train, E_train, lr=lrc, init_method=init_method,optimizer=optimizer,num_epochs=num_epochs,l2_reg=l2c,early_stopping=early_stopping,penal=penal)
+    Surv=deephaz.predict_surv(X_test,use_log = False)
+    score=deephaz.predict_risk(X_test,use_log = False)
     order = np.argsort(-T_test)
     score = score[order]
     T_test = T_test[order]
     E_test = E_test[order]
-    C_index = _concordance_index(score, T_test, E_test, True)[0] #compute concordance index
+    C_index = _concordance_index(score, T_test, E_test, True)[0]
     return(deephaz,Surv,C_index)
+    
+
+
     
 
